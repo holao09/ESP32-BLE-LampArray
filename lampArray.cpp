@@ -27,7 +27,7 @@ LampArray_::LampArray_(BLEServer *pServer) :
 
 void LampArray_::Start()
 {
-    std::string name = "Eric Badger";
+    std::string name = "MoeGod Product";
     manufacturer()->setValue(name);
     pnp(0x01, 0x02e5, 0xbad6, 0x0110 );
     hidInfo(0x00, 0x02);
