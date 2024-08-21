@@ -15,16 +15,14 @@
 
 #define LAMP_MULTI_UPDATE_LAMP_COUNT           8
 
-typedef struct __attribute__ ((__packed__)) LampArrayColor_
-{
+typedef struct __attribute__ ((__packed__)) LampArrayColor_ {
     uint8_t RedChannel;
     uint8_t GreenChannel;
     uint8_t BlueChannel;
     uint8_t GainChannel;
 } LampArrayColor;
 
-typedef struct __attribute__ ((__packed__)) LampArrayAttributesReport_
-{
+typedef struct __attribute__ ((__packed__)) LampArrayAttributesReport_ {
     uint16_t LampCount;
     uint32_t BoundingBoxWidth;
     uint32_t BoundingBoxHeight;
@@ -33,13 +31,11 @@ typedef struct __attribute__ ((__packed__)) LampArrayAttributesReport_
     uint32_t MinUpdateIntervalInMicroseconds;
 } LampArrayAttributesReport;
 
-typedef struct __attribute__ ((__packed__)) LampAttributesRequestReport_
-{
+typedef struct __attribute__ ((__packed__)) LampAttributesRequestReport_ {
     uint16_t LampId;
 } LampAttributesRequestReport;
 
-typedef struct __attribute__ ((__packed__)) LampAttributesResponseReport_
-{
+typedef struct __attribute__ ((__packed__)) LampAttributesResponseReport_ {
     uint16_t LampId;
     uint32_t PositionX;
     uint32_t PositionY;
@@ -54,23 +50,20 @@ typedef struct __attribute__ ((__packed__)) LampAttributesResponseReport_
     uint8_t  LampKey;
 } LampAttributesResponseReport;
 
-typedef struct __attribute__ ((__packed__)) LampMultiUpdateReport_
-{
+typedef struct __attribute__ ((__packed__)) LampMultiUpdateReport_ {
     uint8_t  LampCount;
     uint8_t  LampUpdateFlags;
     uint16_t LampIds[LAMP_MULTI_UPDATE_LAMP_COUNT];
     LampArrayColor UpdateColors[LAMP_MULTI_UPDATE_LAMP_COUNT];
 } LampMultiUpdateReport;
 
-typedef struct __attribute__ ((__packed__)) LampRangeUpdateReport_
-{
+typedef struct __attribute__ ((__packed__)) LampRangeUpdateReport_ {
     uint8_t  LampUpdateFlags;
     uint16_t LampIdStart;
     uint16_t LampIdEnd;
     LampArrayColor UpdateColor;
 } LampRangeUpdateReport;
 
-typedef struct __attribute__ ((__packed__)) LampArrayControlReport_
-{
+typedef struct __attribute__ ((__packed__)) LampArrayControlReport_ {
     uint8_t AutonomousMode;
 } LampArrayControlReport;
