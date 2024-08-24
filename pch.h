@@ -6,19 +6,19 @@
 #undef CORE_DEBUG_LEVEL
 #endif
 
-#define CORE_DEBUG_LEVEL 6
-#define CONFIG_LOG_DEFAULT_LEVEL 6
+//#define CORE_DEBUG_LEVEL 1
+//#define CONFIG_LOG_DEFAULT_LEVEL 1
 
 // NeoPixel shield always communicates over PIN6.  However, since we have a level-shifter
 // between board-output to shield-input we must output over a different pin (PIN5)
-//#define NEO_PIXEL_PIN 5
 
-#define LAMP_COUNT 512
-
-//#define PIXEL_TYPE NEO_GRBW + NEO_KHZ800
+#define PIXEL_TYPE NEO_GRBW + NEO_KHZ800
 
 #define PIN       33
-//#define NUMPIXELS 512
+#define LAMP_COUNT 60
+#define NEO_PIXEL_LAMP_UPDATE_LATENCY (0x04)
+#define LAMP_NOT_PROGRAMMABLE 0x00
+#define LAMP_IS_PROGRAMMABLE 0x01
 
 #include <Adafruit_NeoPixel.h>
 #include "BLEDevice.h"

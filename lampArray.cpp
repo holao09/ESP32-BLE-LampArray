@@ -14,12 +14,12 @@ LampArray_::LampArray_(BLEServer * pServer) :
     memset(&m_cachedStateWriteTo, 0, sizeof(m_cachedStateWriteTo));
     memset(&m_cachedStateReadFrom, 0, sizeof(m_cachedStateReadFrom));
     // Set the default effect to display all Lamps Blue.
-    LampArrayColor defaultColor = {0, 0, 1, 0};
+    LampArrayColor defaultColor = {128, 128, 128, 0};
     SetDefaultColor(defaultColor);
     // On device start, always display the default effect.
-    m_useDefaultEffect = true;
+    m_useDefaultEffect = false;
     _pServer = pServer;
-    Serial.println("LampArray_::LampArray()");
+    log_i("LampArray_::LampArray()");
 }
 
 void LampArray_::Start()
@@ -51,7 +51,7 @@ void LampArray_::Start()
     pSecurity->setAuthenticationMode(ESP_LE_AUTH_REQ_SC_BOND);
     pSecurity->setCapability(ESP_IO_CAP_NONE);
     pSecurity->setInitEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
-    Serial.println("LampArray_::Start()");
+    log_i("LampArray_::Start()");
 }
 void LampArray_::SetDefaultColor(LampArrayColor color) noexcept
 {
@@ -90,8 +90,11 @@ void LampArray_::UpdateLampStateCacheFromMultiUpdateReport(uint8_t * data, uint1
         // Ignore update if not within bounds.
         if (report.LampIds[i] < LAMP_COUNT) {
             m_cachedStateWriteTo.Colors[report.LampIds[i]] = report.UpdateColors[i];
+            log_i("UpdateLampStateCacheFromMultiUpdateReport m_cachedStateWriteTo.Colors[%d]: %d %d %d %d", i, m_cachedStateWriteTo.Colors[i].RedChannel,
+                  m_cachedStateWriteTo.Colors[i].GreenChannel, m_cachedStateWriteTo.Colors[i].BlueChannel, m_cachedStateWriteTo.Colors[i].GainChannel);
         }
     }
+    log_i("report.LampUpdateFlags = %d", report.LampUpdateFlags);
     // Don't want the consumer to update before the Host has completed the batch of updates.
     if (report.LampUpdateFlags & LAMP_UPDATE_FLAG_UPDATE_COMPLETE) {
         m_cachedStateReadFrom = m_cachedStateWriteTo;
@@ -109,7 +112,10 @@ void LampArray_::UpdateLampStateCacheFromRangeUpdateReport(uint8_t * data, uint1
         report.LampIdStart <= report.LampIdEnd) {
         for (uint16_t i = report.LampIdStart; i <= report.LampIdEnd; i++) {
             m_cachedStateWriteTo.Colors[i] = report.UpdateColor;
+            //log_i("UpdateLampStateCacheFromRangeUpdateReport m_cachedStateWriteTo.Colors[%d]: %d %d %d %d", i, m_cachedStateWriteTo.Colors[i].RedChannel,
+            //	m_cachedStateWriteTo.Colors[i].GreenChannel, m_cachedStateWriteTo.Colors[i].BlueChannel, m_cachedStateWriteTo.Colors[i].GainChannel);
         }
+        log_i("report.LampUpdateFlags = %d", report.LampUpdateFlags);
         // Don't want the consumer to update before the Host has completed the batch of updates.
         if (report.LampUpdateFlags & LAMP_UPDATE_FLAG_UPDATE_COMPLETE) {
             m_cachedStateReadFrom = m_cachedStateWriteTo;
@@ -136,6 +142,7 @@ void LampArray_::onRead(BLECharacteristic * p)
         p->setValue(pReport, sizeof(LampArrayAttributesReport));
         //p->notify();
         log_i("LampArrayAttributesReport size=%d", sizeof(LampArrayAttributesReport));
+        log_i("s_lampArrayAttributesReport LampCount = %d", s_lampArrayAttributesReport.LampCount);
     } else if (p == m_bleLampAttributesReponseReport) {
         p->setValue((uint8_t *)&s_lampAttributesReports[m_lastLampIdRequested], sizeof(LampAttributesResponseReport));
         //p->notify();
@@ -145,25 +152,35 @@ void LampArray_::onRead(BLECharacteristic * p)
             // Reset to zero
             m_lastLampIdRequested = 0;
         }
-    } else {
-        Serial.println("unexpected");
+    } else if (p == m_bleLampAttributesRequestReport) {
+        log_i("m_bleLampAttributesRequestReport");
+    } else if (p == m_bleLampMultiUpdateReport) {
+        log_i("m_bleLampMultiUpdateReport");
+    } else if (p == m_bleLampRangeUpdateReport) {
+        log_i("m_bleLampRangeUpdateReport");
+    } else if (p == m_bleLampArrayControlReport) {
+        log_i("m_bleLampArrayControlReport");
+        LampArrayControlReport s_lampArrayControlReport = {1};
+        uint8_t * pReport = (uint8_t *)&s_lampArrayControlReport;
+        p->setValue((uint8_t *)&s_lampArrayControlReport, sizeof(LampArrayControlReport));
+        p->notify();
     }
 }
 
 void LampArray_::onWrite(BLECharacteristic * p)
 {
-    Serial.println("LampArray_::onWrite");
+    log_i("LampArray_::onWrite");
     if (p == m_bleLampMultiUpdateReport) {
-        Serial.println("m_bleLampMultiUpdateReport");
+        log_i("m_bleLampMultiUpdateReport");
         UpdateLampStateCacheFromMultiUpdateReport(p->getData(), p->getLength() );
     } else if (p == m_bleLampRangeUpdateReport) {
-        Serial.println("m_bleLampRangeUpdateReport");
+        log_i("m_bleLampRangeUpdateReport");
         UpdateLampStateCacheFromRangeUpdateReport(p->getData(), p->getLength() );
     } else if (p == m_bleLampArrayControlReport) {
-        Serial.println("m_bleLampArrayControlReport");
+        log_i("m_bleLampArrayControlReport");
         UpdateCachedUseDefaultEffect(p->getData(), p->getLength() );
     } else if (p == m_bleLampAttributesRequestReport) {
-        Serial.println("m_bleLampAttributesRequestReport");
+        log_i("m_bleLampAttributesRequestReport");
         UpdateRequestLampFromLampAttributesRequestReport(p->getData(), p->getLength() );
     }
 }

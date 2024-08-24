@@ -1,10 +1,8 @@
+#include <Adafruit_NeoPixel.h>
+
 #include "pch.h"
 
-#define PIN       33
-#define NUMPIXELS 512
-
-
-Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels(LAMP_COUNT, PIN, NEO_GRB + NEO_KHZ800);
 
 
 // Always set the device to black when first powered-on.
@@ -28,6 +26,7 @@ class Callbacks : public BLEServerCallbacks
     {
         Serial.println("Disconnected");
         _fReady = false;
+        _pServer->getAdvertising()->start();
     }
 };
 
@@ -63,15 +62,16 @@ void loop()
         bool update = false;
         for (int i = 0; i < LAMP_COUNT; i++) {
             // Ignore the gain channel, only care about RGB.
-            if (displayState.Colors[i].RedChannel != currentState.Colors[i].RedChannel ||
-                displayState.Colors[i].GreenChannel != currentState.Colors[i].GreenChannel ||
-                displayState.Colors[i].BlueChannel != currentState.Colors[i].BlueChannel) {
+            if ((displayState.Colors[i].RedChannel != currentState.Colors[i].RedChannel ||
+                 displayState.Colors[i].GreenChannel != currentState.Colors[i].GreenChannel ||
+                 displayState.Colors[i].BlueChannel != currentState.Colors[i].BlueChannel) && (currentState.Colors[i].GainChannel != 0)) {
                 // Update the current color (cache and set pixel state)
                 memcpy(&(displayState.Colors[i]), &(currentState.Colors[i]), sizeof(LampArrayColor));
                 pixels.setPixelColor(i, pixels.Color(
-                                         displayState.Colors[i].RedChannel,
-                                         displayState.Colors[i].GreenChannel,
-                                         displayState.Colors[i].BlueChannel));
+                                         displayState.Colors[i].RedChannel/(256/displayState.Colors[i].GainChannel),
+                                         displayState.Colors[i].GreenChannel/(256/displayState.Colors[i].GainChannel),
+                                         displayState.Colors[i].BlueChannel/(256/displayState.Colors[i].GainChannel)
+                                     ));
                 update = true;
             }
         }
